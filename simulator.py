@@ -8,7 +8,7 @@ class Runner:
 
 class Agent:
 
-    dimensions = ['d1', 'd2', 'd3', 'd4']
+    dimensions = ['d1']
 
     @staticmethod
     def generate_profile():
@@ -17,7 +17,13 @@ class Agent:
 
     @staticmethod
     def distance(population, a, b):
-        pass
+        # cosine similarity
+        v_a = np.array([population.nodes[a][d] for d in Agent.dimensions])
+        v_b = np.array([population.nodes[b][d] for d in Agent.dimensions])
+
+        theta = v_a.dot(v_b) / np.sqrt(np.sum(v_a ** 2) * np.sum(v_b ** 2))
+        return np.cos(theta)
+
 
     @staticmethod
     def select(population, a=None):
@@ -26,6 +32,13 @@ class Agent:
     @staticmethod
     def interact(population, a, b):
         pass
+
+    def set_relation(population, a, b):
+        dist = Agent.distance(population, a, b)
+        if dist > 0:
+            population.add_edge(a, b, weight=dist)
+        elif population.has_edge(a,b):
+            population.remove_edge(a, b)
  
 class Population:
 
@@ -38,6 +51,8 @@ class Population:
         agents = [agentclass.generate_profile() for x in range(size)]
         attributes = dict(zip(range(size), agents))
         nx.set_node_attributes(graph, attributes)
+
+        _ = [Agent.set_relation(graph, *edge) for edge in graph.edges]
 
         self._size = size
         self._graph = graph
