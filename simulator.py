@@ -1,14 +1,17 @@
+import copy
 import numpy as np
 import networkx as nx
-import matplotlib.pyplot as plt
 
 class Runner:
-    def __init__(self):
+    def __init__(self, population, n=10, steps=1000, manual=False):
+        self._p = [copy.deepcopy(population) for x in range(n)]
+
+    def evolve(self):
         pass
 
 class Agent:
 
-    dimensions = ['d1']
+    dimensions = ['d1', 'd2']
 
     @staticmethod
     def generate_profile():
@@ -17,12 +20,12 @@ class Agent:
 
     @staticmethod
     def distance(population, a, b):
-        # cosine similarity
+        # sine similarity (TODO: implement also euclidean distance)
         v_a = np.array([population.nodes[a][d] for d in Agent.dimensions])
         v_b = np.array([population.nodes[b][d] for d in Agent.dimensions])
 
         theta = v_a.dot(v_b) / np.sqrt(np.sum(v_a ** 2) * np.sum(v_b ** 2))
-        return np.cos(theta)
+        return np.sin(theta)
 
 
     @staticmethod
@@ -38,7 +41,7 @@ class Agent:
         if dist > 0:
             population.add_edge(a, b, weight=dist)
         elif population.has_edge(a,b):
-            population.remove_edge(a, b)
+            population.add_edge(a, b, weight=0)
  
 class Population:
 
@@ -69,5 +72,4 @@ class Population:
 
 if __name__ == "__main__":
     p = Population(10, 'smallworld')
-    nx.draw(p.graph)
-    plt.show()
+    Runner(p, n=1, manual=True)
