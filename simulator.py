@@ -7,7 +7,7 @@ class Runner:
         self._p = [copy.deepcopy(population) for x in range(n)]
 
     def evolve(self):
-        pass
+        _ = [p.tic() for p in self._p]
 
 class Agent:
 
@@ -31,7 +31,14 @@ class Agent:
 
     @staticmethod
     def select(population, a=None):
-        pass
+        if a == None:
+            selected = np.random.choice(population.nodes)
+        else:
+            selected = a
+            while selected == a:
+                selected = np.random.choice(population.nodes)
+
+        return selected
 
     @staticmethod
     def interact(population, a, b):
@@ -62,6 +69,14 @@ class Population:
         self._graph = graph
         self._agentclass = agentclass
 
+    def tic(self):
+        emitter_node = Agent.select(self._graph)
+        receiver_node = Agent.select(self._graph, emitter_node)
+
+        print(emitter_node, receiver_node)
+        #Agent.interact(self._graph, emitter_node, receiver_node)
+        #Agent.set_relation(self._graph, emitter_node, receiver_node)
+
     @property
     def size(self):
         return self._size
@@ -73,4 +88,5 @@ class Population:
 
 if __name__ == "__main__":
     p = Population(10, 'smallworld')
-    Runner(p, n=1, manual=True)
+    sim = Runner(p, n=1, manual=True)
+    sim.evolve()
