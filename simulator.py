@@ -20,12 +20,13 @@ class Agent:
 
     @staticmethod
     def distance(population, a, b):
-        # sine similarity (TODO: implement also euclidean distance)
+        # euclidean distance * sine similarity
         v_a = np.array([population.nodes[a][d] for d in Agent.dimensions])
         v_b = np.array([population.nodes[b][d] for d in Agent.dimensions])
 
+        d = np.sqrt(np.sum([a ** 2 + b ** 2 for a, b in zip(v_a, v_b)]))
         theta = v_a.dot(v_b) / np.sqrt(np.sum(v_a ** 2) * np.sum(v_b ** 2))
-        return np.sin(theta)
+        return d * np.sin(theta)
 
 
     @staticmethod
