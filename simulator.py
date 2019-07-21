@@ -1,4 +1,5 @@
 import copy
+import pickledb
 import numpy as np
 import networkx as nx
 
@@ -6,10 +7,23 @@ import dask.threaded
 from dask import compute, delayed
 
 class Runner:
-    def __init__(self, population, nsim, snapshot_rate=10):
-        population_size = population.size
+    def __init__(self, population, nsim, outfilename, snapshot_rate=10):
+        self._nsim = nsim
         self._p = [copy.deepcopy(population) for x in range(nsim)]
         self._snapshot_rate = snapshot_rate
+        self._counter = 0
+        self._outdb = self._init_outdb(outfilename)
+
+    def _init_outdb(self, outfilename):
+        outdb = pickledb.load(outfilename, False)
+        params = {
+                'nsim': self._nsim,
+                'snapshot_rate': self._snapshot_rate
+        }
+        outdb.set('_params', params)
+        outdb.dump()
+
+        return outdb
 
     def _evolve(self, population, nsteps):
         _ = [population.tic() for x in range(nsteps)]
@@ -18,19 +32,25 @@ class Runner:
         tasks = [delayed(self._evolve)(p, nsteps) for p in self._p]
         compute(*tasks, scheduler='threads')
 
+    def _serialize(self, population):
+        return ''.join(nx.generate_gml(population.graph))
+
     def _take_snapshot(self):
-        print('click!')
+        tasks = [delayed(self._serialize)(p) for p in self._p]
+        values = compute(*tasks, scheduler='threads')
+        for i, val in enumerate(values):
+            key = f'{i}_{self._counter}'
+            self._outdb.set(key, val)
+        self._outdb.dump()
 
     def run(self, nsteps=1000):
+        # nsteps MUST be divisible by the sampling_rate
+        # extra steps will be ignored (design choice)
         nepochs = nsteps // self._snapshot_rate
-        odds = nsteps % self._snapshot_rate
         
         for i in range(nepochs):
             self._epoch(self._snapshot_rate)
-            self._take_snapshot()
-
-        if odds > 0:
-            self._epoch(odds)
+            self._counter += self._snapshot_rate
             self._take_snapshot()
 
 
@@ -127,7 +147,7 @@ if __name__ == "__main__":
     print(f"Initializing: population_size [{pop_size}] n_populations [{n_pops}]")
 
     p = Population(pop_size, 'smallworld')
-    sim = Runner(p, n_pops, sr)
+    sim = Runner(p, n_pops, 'sim.outdb', sr)
 
     print('[', datetime.datetime.now().time(), ']')
     print("Allocation of the resources completed!")
