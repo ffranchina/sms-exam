@@ -3,11 +3,19 @@ import numpy as np
 import networkx as nx
 
 class Runner:
-    def __init__(self, population, n=10, steps=1000, manual=False):
+    def __init__(self, population, n=10):
+        population_size = population.size
         self._p = [copy.deepcopy(population) for x in range(n)]
+        self._stepcounter = 0
 
-    def evolve(self):
-        _ = [p.tic() for p in self._p]
+    def evolve(self, nsteps=1):
+        for p in self._p:
+            _ = [p.tic() for x in range(nsteps)]
+        self._stepcounter += nsteps
+
+    @property
+    def stepcounter(self):
+        return self._stepcounter
 
 class Agent:
 
@@ -91,6 +99,23 @@ class Population:
 
 
 if __name__ == "__main__":
-    p = Population(10, 'smallworld')
-    sim = Runner(p, n=1, manual=True)
-    sim.evolve()
+    pop_size = 1000
+    n_pops = 10
+    batches = 10
+    steps = 100
+
+    import datetime
+
+    print('[', datetime.datetime.now().time(), ']')
+    print(f"Initializing: population_size [{pop_size}] n_populations [{n_pops}]")
+
+    p = Population(pop_size, 'smallworld')
+    sim = Runner(p, n=n_pops)
+
+    print('[', datetime.datetime.now().time(), ']')
+    print("Allocation of the resources completed!")
+
+    for x in range(batches):
+        sim.evolve(steps)
+        print('[', datetime.datetime.now().time(), ']')
+        print(f"Computed {sim.stepcounter} steps")
