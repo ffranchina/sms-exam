@@ -42,7 +42,12 @@ class Agent:
 
     @staticmethod
     def interact(population, a, b):
-        pass
+        dimension = np.random.choice(Agent.dimensions)
+        node_a = population.nodes[a]
+        node_b = population.nodes[b]
+        weighted_mean = np.mean((node_a[dimension], node_b[dimension])) * 0.01
+        node_a[dimension] += weighted_mean
+        node_b[dimension] += weighted_mean
 
     def set_relation(population, a, b):
         dist = Agent.distance(population, a, b)
@@ -73,9 +78,8 @@ class Population:
         emitter_node = Agent.select(self._graph)
         receiver_node = Agent.select(self._graph, emitter_node)
 
-        print(emitter_node, receiver_node)
-        #Agent.interact(self._graph, emitter_node, receiver_node)
-        #Agent.set_relation(self._graph, emitter_node, receiver_node)
+        Agent.interact(self._graph, emitter_node, receiver_node)
+        Agent.set_relation(self._graph, emitter_node, receiver_node)
 
     @property
     def size(self):
