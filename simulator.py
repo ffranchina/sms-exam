@@ -2,15 +2,21 @@ import copy
 import numpy as np
 import networkx as nx
 
+import dask.threaded
+from dask import compute, delayed
+
 class Runner:
     def __init__(self, population, n=10):
         population_size = population.size
         self._p = [copy.deepcopy(population) for x in range(n)]
         self._stepcounter = 0
 
+    def _evolve_population(self, population, nsteps):
+        _ = [population.tic() for x in range(nsteps)]
+
     def evolve(self, nsteps=1):
-        for p in self._p:
-            _ = [p.tic() for x in range(nsteps)]
+        tasks = [delayed(self._evolve_population)(p, nsteps) for p in self._p]
+        compute(*tasks, scheduler='threads')
         self._stepcounter += nsteps
 
     @property
@@ -19,7 +25,7 @@ class Runner:
 
 class Agent:
 
-    dimensions = ['d1', 'd2']
+    dimensions = ['d1', 'd2', 'd3', 'd4', 'd5']
 
     @staticmethod
     def generate_profile():
@@ -102,7 +108,7 @@ if __name__ == "__main__":
     pop_size = 1000
     n_pops = 10
     batches = 10
-    steps = 100
+    steps = 1000
 
     import datetime
 
