@@ -6,22 +6,33 @@ import dask.threaded
 from dask import compute, delayed
 
 class Runner:
-    def __init__(self, population, n=10):
+    def __init__(self, population, nsim, snapshot_rate=10):
         population_size = population.size
-        self._p = [copy.deepcopy(population) for x in range(n)]
-        self._stepcounter = 0
+        self._p = [copy.deepcopy(population) for x in range(nsim)]
+        self._snapshot_rate = snapshot_rate
 
-    def _evolve_population(self, population, nsteps):
+    def _evolve(self, population, nsteps):
         _ = [population.tic() for x in range(nsteps)]
 
-    def evolve(self, nsteps=1):
-        tasks = [delayed(self._evolve_population)(p, nsteps) for p in self._p]
+    def _epoch(self, nsteps):
+        tasks = [delayed(self._evolve)(p, nsteps) for p in self._p]
         compute(*tasks, scheduler='threads')
-        self._stepcounter += nsteps
 
-    @property
-    def stepcounter(self):
-        return self._stepcounter
+    def _take_snapshot(self):
+        print('click!')
+
+    def run(self, nsteps=1000):
+        nepochs = nsteps // self._snapshot_rate
+        odds = nsteps % self._snapshot_rate
+        
+        for i in range(nepochs):
+            self._epoch(self._snapshot_rate)
+            self._take_snapshot()
+
+        if odds > 0:
+            self._epoch(odds)
+            self._take_snapshot()
+
 
 class Agent:
 
@@ -107,7 +118,7 @@ class Population:
 if __name__ == "__main__":
     pop_size = 1000
     n_pops = 10
-    batches = 10
+    sr = 10
     steps = 1000
 
     import datetime
@@ -116,12 +127,9 @@ if __name__ == "__main__":
     print(f"Initializing: population_size [{pop_size}] n_populations [{n_pops}]")
 
     p = Population(pop_size, 'smallworld')
-    sim = Runner(p, n=n_pops)
+    sim = Runner(p, n_pops, sr)
 
     print('[', datetime.datetime.now().time(), ']')
     print("Allocation of the resources completed!")
 
-    for x in range(batches):
-        sim.evolve(steps)
-        print('[', datetime.datetime.now().time(), ']')
-        print(f"Computed {sim.stepcounter} steps")
+    sim.run(100)
