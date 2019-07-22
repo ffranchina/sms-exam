@@ -86,7 +86,20 @@ class RandomGraph:
         plt.clf()
 
 
+class ClusterGraph(RandomGraph):
+    def __init__(self, filename, trackid):
+        self._outdb = pickledb.load(filename, False)
+        self._trackid = str(trackid)
 
-r = RandomGraph('sim2.outdb', '0')
+        nkeys = self._outdb.totalkeys() - 1
+        snapshot_rate = self._outdb.get('_params')['snapshot_rate']
+        last_snapshot = nkeys * snapshot_rate
+        self._snapshots = range(0, last_snapshot, snapshot_rate)
+
+        graphid = trackid + '_' + str(last_snapshot - snapshot_rate)
+        tmpgraph = nx.parse_gml(self._outdb.get(graphid))
+        self._pos = nx.spring_layout(tmpgraph)
+
+r = ClusterGraph('sim2.outdb', '0')
 r.plot('0', 'prova.png')
 r.plot_gif('prova.gif', False)
