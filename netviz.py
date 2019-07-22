@@ -38,9 +38,10 @@ class Helper:
 
 class RandomGraph:
 
-    def __init__(self, filename):
+    def __init__(self, filename, trackid):
         self._outdb = pickledb.load(filename, False)
-        tmpgraph = nx.parse_gml(self._outdb.get('0_0'))
+        self._trackid = trackid
+        tmpgraph = nx.parse_gml(self._outdb.get(trackid + '_0'))
         self._pos = nx.random_layout(tmpgraph)
 
         nkeys = self._outdb.totalkeys() - 1
@@ -50,8 +51,8 @@ class RandomGraph:
     def _load(self, graphid):
         return nx.parse_gml(self._outdb.get(graphid))
 
-    def _plot(self, graphid):
-        G = self._load(graphid) 
+    def _plot(self, stepid):
+        G = self._load(self._trackid + '_' + stepid) 
         helper = Helper(G)
         nodecolors = [helper.color(node) for node in G.nodes]
         nodesize = 30
@@ -64,14 +65,13 @@ class RandomGraph:
                 width=.5)
         edges._edgecolors = mcolors.to_rgba_array(edgecolor)
 
-    def plot_gif(self, trackid, filename, deleteimgs=True):
+    def plot_gif(self, filename, deleteimgs=True):
         tmpdir = tempfile.mkdtemp()
         imgcounter = 0
         for i in self._snapshots:
-            graphid = f'{trackid}_{i}'
             imgname = '%04d.png' % imgcounter
             path = os.path.join(tmpdir, imgname)
-            self.plot(graphid, path)
+            self.plot(str(i), path)
             imgcounter += 1
 
         os.system(f'convert {tmpdir}/* -delay 50 -loop 0 {filename}')
@@ -79,13 +79,14 @@ class RandomGraph:
         if deleteimgs:
             shutil.rmtree(tmpdir)
 
-    def plot(self, graphid, filename):
-        self._plot(graphid)
+    def plot(self, stepid, filename):
+        self._plot(stepid)
         plt.savefig(filename, dpi=150, bbox_inches='tight', \
                 pad_inches=-0.05)
         plt.clf()
 
 
-r = RandomGraph('sim.outdb')
-#r.plot('0_0', 'prova.png')
-r.plot_gif('0', 'prova.gif', False)
+
+r = RandomGraph('sim2.outdb', '0')
+r.plot('0', 'prova.png')
+r.plot_gif('prova.gif', False)
