@@ -64,7 +64,7 @@ class RandomGraph:
                 width=.5)
         edges._edgecolors = mcolors.to_rgba_array(edgecolor)
 
-    def plot_gif(self, trackid, filename):
+    def plot_gif(self, trackid, filename, deleteimgs=True):
         tmpdir = tempfile.mkdtemp()
         imgcounter = 0
         for i in self._snapshots:
@@ -75,7 +75,9 @@ class RandomGraph:
             imgcounter += 1
 
         os.system(f'convert {tmpdir}/* -delay 50 -loop 0 {filename}')
-        #shutil.rmtree(tmpdir)
+        
+        if deleteimgs:
+            shutil.rmtree(tmpdir)
 
     def plot(self, graphid, filename):
         self._plot(graphid)
@@ -86,4 +88,4 @@ class RandomGraph:
 
 r = RandomGraph('sim.outdb')
 #r.plot('0_0', 'prova.png')
-r.plot_gif('0', 'prova.gif')
+r.plot_gif('0', 'prova.gif', False)
