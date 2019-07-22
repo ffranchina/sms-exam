@@ -43,6 +43,7 @@ class Runner:
             key = f'{i}_{self._counter}'
             self._outdb.set(key, val)
         self._outdb.dump()
+        self._counter += self._snapshot_rate
 
     def run(self, nsteps=1000):
         # nsteps MUST be divisible by the sampling_rate
@@ -51,7 +52,6 @@ class Runner:
         
         for i in range(nepochs):
             self._epoch(self._snapshot_rate)
-            self._counter += self._snapshot_rate
             self._take_snapshot()
 
 

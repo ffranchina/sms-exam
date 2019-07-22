@@ -43,6 +43,10 @@ class RandomGraph:
         tmpgraph = nx.parse_gml(self._outdb.get('0_0'))
         self._pos = nx.random_layout(tmpgraph)
 
+        nkeys = self._outdb.totalkeys() - 1
+        snapshot_rate = self._outdb.get('_params')['snapshot_rate']
+        self._snapshots = range(0, nkeys * snapshot_rate, snapshot_rate)
+
     def _load(self, graphid):
         return nx.parse_gml(self._outdb.get(graphid))
 
@@ -60,10 +64,10 @@ class RandomGraph:
                 width=.5)
         edges._edgecolors = mcolors.to_rgba_array(edgecolor)
 
-    def plot_gif(self, trackid, snapshots, filename):
+    def plot_gif(self, trackid, filename):
         tmpdir = tempfile.mkdtemp()
         imgcounter = 0
-        for i in snapshots:
+        for i in self._snapshots:
             graphid = f'{trackid}_{i}'
             imgname = '%04d.png' % imgcounter
             path = os.path.join(tmpdir, imgname)
@@ -80,6 +84,6 @@ class RandomGraph:
         plt.clf()
 
 
-r = RandomGraph('sim2.outdb')
+r = RandomGraph('sim.outdb')
 #r.plot('0_0', 'prova.png')
-r.plot_gif('0', range(0, 1010, 10), 'prova.gif')
+r.plot_gif('0', 'prova.gif')
