@@ -13,6 +13,7 @@ class Runner:
         self._snapshot_rate = snapshot_rate
         self._counter = 0
         self._outdb = self._init_outdb(outfilename)
+        self._take_snapshot()
 
     def _init_outdb(self, outfilename):
         outdb = pickledb.load(outfilename, False)
@@ -56,26 +57,26 @@ class Runner:
 
 class Agent:
 
-    dimensions = ['d1', 'd2', 'd3', 'd4', 'd5']
+    dimensions = ['d1', 'd2']
 
-    @staticmethod
-    def generate_profile():
-        scores = np.random.rand(len(Agent.dimensions)) * 2 - 1
-        return dict(zip(Agent.dimensions, scores))
+    @classmethod
+    def generate_profile(cls):
+        scores = np.random.rand(len(cls.dimensions)) * 2 - 1
+        return dict(zip(cls.dimensions, scores))
 
-    @staticmethod
-    def distance(population, a, b):
+    @classmethod
+    def distance(cls, population, a, b):
         # euclidean distance * sine similarity
-        v_a = np.array([population.nodes[a][d] for d in Agent.dimensions])
-        v_b = np.array([population.nodes[b][d] for d in Agent.dimensions])
+        v_a = np.array([population.nodes[a][d] for d in cls.dimensions])
+        v_b = np.array([population.nodes[b][d] for d in cls.dimensions])
 
         d = np.sqrt(np.sum([a ** 2 + b ** 2 for a, b in zip(v_a, v_b)]))
         theta = v_a.dot(v_b) / np.sqrt(np.sum(v_a ** 2) * np.sum(v_b ** 2))
         return d * np.sin(theta)
 
 
-    @staticmethod
-    def select(population, a=None):
+    @classmethod
+    def select(cls, population, a=None):
         if a == None:
             selected = np.random.choice(population.nodes)
         else:
@@ -85,17 +86,18 @@ class Agent:
 
         return selected
 
-    @staticmethod
-    def interact(population, a, b):
-        dimension = np.random.choice(Agent.dimensions)
+    @classmethod
+    def interact(cls, population, a, b):
+        dimension = np.random.choice(cls.dimensions)
         node_a = population.nodes[a]
         node_b = population.nodes[b]
         weighted_mean = np.mean((node_a[dimension], node_b[dimension])) * 0.01
         node_a[dimension] += weighted_mean
         node_b[dimension] += weighted_mean
 
-    def set_relation(population, a, b):
-        dist = Agent.distance(population, a, b)
+    @classmethod
+    def set_relation(cls, population, a, b):
+        dist = cls.distance(population, a, b)
         if dist > 0:
             population.add_edge(a, b, weight=dist)
         elif population.has_edge(a,b):
@@ -103,28 +105,28 @@ class Agent:
  
 class Population:
 
-    def __init__(self, size, topology='none', agentclass=Agent):
+    def __init__(self, size, topology='none', agentcls=Agent):
         if topology == 'none':
             graph = nx.empty_graph(size)
         elif topology == 'smallworld':
             graph = nx.barabasi_albert_graph(size, int(np.log(size)))
 
-        agents = [agentclass.generate_profile() for x in range(size)]
+        agents = [agentcls.generate_profile() for x in range(size)]
         attributes = dict(zip(range(size), agents))
         nx.set_node_attributes(graph, attributes)
 
-        _ = [Agent.set_relation(graph, *edge) for edge in graph.edges]
+        _ = [agentcls.set_relation(graph, *edge) for edge in graph.edges]
 
         self._size = size
         self._graph = graph
-        self._agentclass = agentclass
+        self._agent = agentcls
 
     def tic(self):
-        emitter_node = Agent.select(self._graph)
-        receiver_node = Agent.select(self._graph, emitter_node)
+        emitter_node = self._agent.select(self._graph)
+        receiver_node = self._agent.select(self._graph, emitter_node)
 
-        Agent.interact(self._graph, emitter_node, receiver_node)
-        Agent.set_relation(self._graph, emitter_node, receiver_node)
+        self._agent.interact(self._graph, emitter_node, receiver_node)
+        self._agent.set_relation(self._graph, emitter_node, receiver_node)
 
     @property
     def size(self):
@@ -136,8 +138,8 @@ class Population:
 
 
 if __name__ == "__main__":
-    pop_size = 1000
-    n_pops = 10
+    pop_size = 100
+    n_pops = 1
     sr = 10
     steps = 1000
 
@@ -150,6 +152,9 @@ if __name__ == "__main__":
     sim = Runner(p, n_pops, 'sim.outdb', sr)
 
     print('[', datetime.datetime.now().time(), ']')
-    print("Allocation of the resources completed!")
+    print("Starting evolution of the populations..")
 
-    sim.run(100)
+    sim.run(steps)
+
+    print('[', datetime.datetime.now().time(), ']')
+    print("Completed!")
