@@ -55,7 +55,7 @@ class Runner:
             self._take_snapshot()
 
 
-class Agent:
+class SimpleAgent:
 
     dimensions = ['d1', 'd2']
 
@@ -105,9 +105,11 @@ class Agent:
  
 class Population:
 
-    def __init__(self, size, topology='none', agentcls=Agent):
+    def __init__(self, size, topology='none', agentcls=SimpleAgent):
         if topology == 'none':
             graph = nx.empty_graph(size)
+        elif topology == 'erdosrenyi':
+            graph = nx.fast_gnp_random_graph(size, 0.01)
         elif topology == 'smallworld':
             graph = nx.barabasi_albert_graph(size, int(np.log(size)))
 
@@ -141,15 +143,15 @@ if __name__ == "__main__":
     pop_size = 100
     n_pops = 1
     sr = 10
-    steps = 1000
+    steps = 100
 
     import datetime
 
     print('[', datetime.datetime.now().time(), ']')
     print(f"Initializing: population_size [{pop_size}] n_populations [{n_pops}]")
 
-    p = Population(pop_size, 'smallworld')
-    sim = Runner(p, n_pops, 'sim.outdb', sr)
+    p = Population(pop_size, 'erdosrenyi')
+    sim = Runner(p, n_pops, 'sim3.outdb', sr)
 
     print('[', datetime.datetime.now().time(), ']')
     print("Starting evolution of the populations..")
