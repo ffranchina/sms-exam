@@ -26,8 +26,9 @@ class Helper:
 
     def weights_color(self):
         weights = [attr['weight'] for *_, attr in self._g.edges(data=True)]
-        weights = np.array(weights)
-        weights = weights / np.max(weights)
+        if weights:
+            weights = np.array(weights)
+            weights = weights / np.max(weights)
         colors = [(0.2, 0.2, 0.2, w) for w in weights]
         return colors
 
@@ -63,7 +64,8 @@ class RandomGraph:
                 edgecolors='#333333', cmap=plt.cm.Spectral)
         edges = nx.draw_networkx_edges(G, self._pos, node_size=nodesize, \
                 width=.5)
-        edges._edgecolors = mcolors.to_rgba_array(edgecolor)
+        if edges:
+            edges._edgecolors = mcolors.to_rgba_array(edgecolor)
 
     def plot_gif(self, filename, deleteimgs=True):
         tmpdir = tempfile.mkdtemp()
