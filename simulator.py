@@ -105,7 +105,7 @@ class SimpleAgent:
  
 class Population:
 
-    def __init__(self, size, topology='none', agentcls=SimpleAgent):
+    def __init__(self, size, agentcls, topology):
         if topology == 'none':
             graph = nx.empty_graph(size)
         elif topology == 'erdosrenyi':
@@ -137,26 +137,3 @@ class Population:
     @property
     def graph(self):
         return self._graph
-
-
-if __name__ == "__main__":
-    pop_size = 100
-    n_pops = 1
-    sr = 10
-    steps = 100
-
-    import datetime
-
-    print('[', datetime.datetime.now().time(), ']')
-    print(f"Initializing: population_size [{pop_size}] n_populations [{n_pops}]")
-
-    p = Population(pop_size, 'erdosrenyi')
-    sim = Runner(p, n_pops, 'sim3.outdb', sr)
-
-    print('[', datetime.datetime.now().time(), ']')
-    print("Starting evolution of the populations..")
-
-    sim.run(steps)
-
-    print('[', datetime.datetime.now().time(), ']')
-    print("Completed!")
