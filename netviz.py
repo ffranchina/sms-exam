@@ -100,6 +100,14 @@ class ClusterGraph(RandomGraph):
         tmpgraph = nx.parse_gml(self._outdb.get(graphid))
         self._pos = nx.spring_layout(tmpgraph)
 
-r = ClusterGraph('sim2.outdb', '0')
+
+class SpringGraph(RandomGraph):
+    def _load(self, graphid):
+        G = nx.parse_gml(self._outdb.get(graphid))
+        self._pos = nx.spring_layout(G)
+        return G
+
+
+r = SpringGraph('sim3.outdb', '0')
 r.plot('0', 'prova.png')
-r.plot_gif('prova.gif', False)
+#r.plot_gif('prova.gif', False)
