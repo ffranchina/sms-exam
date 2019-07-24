@@ -102,7 +102,33 @@ class SimpleAgent:
             population.add_edge(a, b, weight=dist)
         elif population.has_edge(a,b):
             population.add_edge(a, b, weight=0)
- 
+
+class DeffuantAgent(SimpleAgent):
+
+    @classmethod
+    def interact(cls, population, a, b):
+        node_a = population.nodes[a]
+        node_b = population.nodes[b]
+        d = cls.distance(population, a, b)
+        if d < 0.7:
+            for d in cls.dimensions:
+                weighted_mean = np.mean((node_a[d], node_b[d])) * 0.5
+                node_a[d] -= weighted_mean
+                node_b[d] -= weighted_mean
+
+class DeffuantIntAgent(SimpleAgent):
+
+    @classmethod
+    def interact(cls, population, a, b):
+        node_a = population.nodes[a]
+        node_b = population.nodes[b]
+        d = cls.distance(population, a, b)
+        if d < 0.1:
+            for d in cls.dimensions:
+                weighted_mean = np.mean((node_a[d], node_b[d])) * 0.5
+                node_a[d] -= weighted_mean
+                node_b[d] -= weighted_mean
+
 class Population:
 
     def __init__(self, size, agentcls, topology):
