@@ -108,3 +108,29 @@ class SpringGraph(RandomGraph):
         G = nx.parse_gml(self._outdb.get(graphid))
         self._pos = nx.spring_layout(G)
         return G
+
+class ScatterPlot:
+
+    def __init__(self, filename, trackid):
+        self._outdb = pickledb.load(filename, False)
+        self._trackid = trackid
+        nkeys = self._outdb.totalkeys() - 1
+        snapshot_rate = self._outdb.get('_params')['snapshot_rate']
+        self._snapshots = range(0, nkeys * snapshot_rate, snapshot_rate)
+
+    def _load(self, graphid):
+        return nx.parse_gml(self._outdb.get(graphid))
+
+    def _plot(self, stepid):
+        G = self._load(self._trackid + '_' + stepid) 
+        helper = Helper(G)
+        nodecolors = [helper.color(node) for node in G.nodes]
+        time = np.full_like(nodecolors, stepid)
+        plt.scatter(time, nodecolors, s=2, c="#555555")
+
+    def plot(self, filename):
+        for i in self._snapshots:
+            self._plot(str(i))
+
+        plt.savefig(filename, dpi=150, bbox_inches='tight')
+        plt.clf()
